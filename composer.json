@@ -1,0 +1,22 @@
+{
+    "name": "elgentos/magento2-link-guest-orders-to-customer",
+    "description": "Link existing guest orders to newly created or existing customer based on e-mail address",
+    "type": "magento2-module",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Peter Jaap Blaakmeer",
+            "email": "peterjaap@elgentos.nl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Elgentos\\LinkGuestOrdersToCustomer\\": ""
+        }
+    }
+}
