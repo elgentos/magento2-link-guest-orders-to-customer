@@ -35,8 +35,12 @@ class LinkOrders extends Command
 
         foreach ($orders as $order) {
             if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
-                $output->writeln('Trying to connect order ' . $order->getIncrementId() . ' to customer ' . $order->getCustomerEmail());
+                $output->writeln(
+                    'Trying to connect order ' . $order->getIncrementId() . ' to customer ' .
+                    $order->getCustomerEmail()
+                );
             }
+
             try {
                 $customer = $this->customerRepository->get($order->getCustomerEmail());
                 if ($order->getIncrementId() && $customer->getId()) {
@@ -45,6 +49,7 @@ class LinkOrders extends Command
                     $this->orderRepository->save($order);
 
                     // Support for downloadables
+                    // @phpstan-ignore-next-line
                     $purchased = $this->purchasedFactory->create()->load(
                         $order->getIncrementId(),
                         'order_increment_id'
@@ -52,25 +57,34 @@ class LinkOrders extends Command
 
                     if ($purchased->getId()) {
                         $purchased->setCustomerId($customer->getId());
+                        // @phpstan-ignore-next-line
                         $purchased->save();
                     }
 
-                    $output->writeln('Connected order ' . $order->getIncrementId() . ' / ' . $order->getCustomerEmail() . '  to customer '. $customer->getEmail());
+                    $output->writeln(
+                        'Connected order ' . $order->getIncrementId() . ' / ' .
+                        $order->getCustomerEmail() . '  to customer ' . $customer->getEmail()
+                    );
                 }
             } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
                 if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
-                    $output->writeln('Customer not found - cannot connect order ' . $order->getIncrementId() . ' to customer ' . $order->getCustomerEmail());
+                    $output->writeln(
+                        'Customer not found - cannot connect order ' .
+                        $order->getIncrementId() . ' to customer ' . $order->getCustomerEmail()
+                    );
                 }
             } catch (\Exception $e) {
                 $output->writeln($e->getMessage());
             }
         }
+
+        return 0;
     }
 
     protected function configure()
     {
         $this->setName('elgentos:link-guest-orders');
-        $this->setDescription('Link existing guest orders to newly created or existing customer based on e-mail address');
+        $this->setDescription('Link existing guest orders to new or existing customers based on e-mail address');
         parent::configure();
     }
 }
