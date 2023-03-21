@@ -1,53 +1,60 @@
 <?php
+/**
+ * Copyright Elgentos BV. All rights reserved.
+ * https://www.elgentos.nl/
+ */
 
 declare(strict_types=1);
 
 namespace Elgentos\LinkGuestOrdersToCustomer\Console\Command;
 
 use Elgentos\LinkGuestOrdersToCustomer\Service\Connector;
-use Magento\Customer\Api\CustomerRepositoryInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Magento\Downloadable\Model\Link\PurchasedFactory;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
-use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Framework\Console\Cli;
 
 class LinkOrders extends Command
 {
-    private OutputInterface $output;
+    /**
+     * @var Connector
+     */
+    private $connector;
 
-    private Connector $connector;
-
+    /**
+     * @param Connector $connector
+     * @param string|null $name
+     */
     public function __construct(
-        public OrderCollectionFactory $orderCollectionFactory,
-        public PurchasedFactory $purchasedFactory,
-        public CustomerRepositoryInterface $customerRepository,
-        public OrderRepositoryInterface $orderRepository,
-        $name = null
+        Connector $connector,
+        string $name = null
     ) {
         parent::__construct($name);
-        $this->connector = new Connector($this);
+        $this->connector = $connector;
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function execute(
         InputInterface $input,
         OutputInterface $output
-    ) {
-        $this->output = $output;
+    ): int {
 
-        $orders = $this->orderCollectionFactory->create()
-            ->addFieldToFilter('customer_id', ['null' => true]);
-
-        $this->output->writeln('Found ' . $orders->getSize() . ' orders that are not connected to customers.');
-
-        foreach ($orders as $order) {
-            $this->connector->connectOrderToCustomer($order, $output);
+        try {
+            $result = $this->connector->connect();
+            $output->writeln('Found ' . $result . ' orders that are not connected to customers.');
+        } catch (\Exception $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            return Cli::RETURN_FAILURE;
         }
 
-        return 0;
+        return Cli::RETURN_SUCCESS;
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function configure()
     {
         $this->setName('elgentos:link-guest-orders');
