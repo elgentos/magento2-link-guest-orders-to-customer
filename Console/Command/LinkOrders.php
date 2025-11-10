@@ -27,7 +27,7 @@ class LinkOrders extends Command
      */
     public function __construct(
         Connector $connector,
-        string $name = null
+        ?string $name = null
     ) {
         parent::__construct($name);
         $this->connector = $connector;
